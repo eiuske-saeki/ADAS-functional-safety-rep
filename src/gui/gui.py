@@ -1,10 +1,18 @@
 import tkinter as tk
 from tkinter import ttk
+import os
 
 class ADASGui:
     def __init__(self, root):
         self.root = root
         self.root.title("ADAS Functional Safety Simulation Tool")
+
+        # 現在のディレクトリから絶対パスを取得
+        script_dir = os.path.dirname(__file__)
+        icon_path = os.path.join(script_dir, 'sim_icon.ico')
+        
+        # アイコンの設定
+        self.root.iconbitmap(icon_path)
 
         self.frame = ttk.Frame(self.root, padding="10 10 10 10")
         self.frame.grid(column=0, row=0, sticky=(tk.W, tk.E, tk.N, tk.S))
