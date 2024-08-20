@@ -16,6 +16,7 @@ build/
 venv/
 env/
 .env
+myenv/
 
 # IDE specific files
 .vscode/
@@ -56,3 +57,6 @@ poetry.lock
 
 # pytype static type analyzer
 .pytype/
+
+# Additional project-specific exclusions
+# Add any other files or directories that should be ignored
