@@ -1,4 +1,4 @@
-def set_data(min_value: float, max_value: float, diff: float, data_set: list):
+def set_data(min_value: float, max_value: float, diff: float, data_set: list) -> list:
     """
     指定された範囲と間隔でデータセットを生成します。
 
@@ -6,11 +6,13 @@ def set_data(min_value: float, max_value: float, diff: float, data_set: list):
     :param max_value: 最大値
     :param diff: 間隔
     :param data_set: データを格納するリスト
+    :return: 生成されたデータセット
     """
     tmp = min_value
     while tmp < (max_value + (diff / 2)):
         data_set.append(f'{tmp:.2f}')
         tmp += diff
+    return data_set  # この行を追加
 
 def kph_to_mps(kph: float) -> float:
     """
