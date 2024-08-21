@@ -9,6 +9,31 @@
 - 結果の可視化と分析
 - ユーザーフレンドリーなGUIインターフェース
 
+## 最近の更新
+- data_generator.pyの改善：エラーハンドリングの強化、パフォーマンスの最適化
+- utils/functions.pyの修正：データ生成機能の信頼性向上
+
+## 使用方法
+
+### データ生成
+data_generator.pyを使用してシミュレーション用のデータを生成できます。
+
+1. 仮想環境をアクティベートします：
+   ```
+   myenv\Scripts\activate  # Windowsの場合
+   ```
+
+2. プロジェクトのルートディレクトリに移動します。
+
+3. 以下のコマンドを実行します：
+   ```
+   python src/data_generation/data_generator.py
+   ```
+
+4. 生成されたデータは `data/output/accel_in.csv` に保存されます。
+
+注意: データ生成パラメータをカスタマイズする場合は、data_generator.py内のuser_input辞書を編集してください。
+
 ## プロジェクト構造
 ```
 ADAS-functional-safety-rep/
@@ -42,8 +67,7 @@ ADAS-functional-safety-rep/
 2. 仮想環境を作成し、アクティベートします：
    ```
    python -m venv myenv
-   source myenv/bin/activate  # Linuxの場合
-   myenv\Scripts\activate     # Windowsの場合
+   myenv\Scripts\activate  # Windowsの場合
    ```
 
 3. 必要なパッケージをインストールします：
@@ -51,22 +75,16 @@ ADAS-functional-safety-rep/
    pip install -r requirements.txt
    ```
 
-## 使用方法
-1. 仮想環境をアクティベートします（上記参照）。
-
-2. アプリケーションを実行します：
-   ```
-   python src/main.py
-   ```
-
-3. GUIの指示に従って、シミュレーションパラメータを設定し、実行します。
-
-4. 結果は `data/output/` ディレクトリに保存されます。
-
 ## 開発
 - `src/` ディレクトリには、各機能モジュールが含まれています。
 - `tests/` ディレクトリには、対応するテストファイルがあります。
 - 新しい機能を追加する場合は、適切なモジュールに実装し、対応するテストを作成してください。
+
+## 今後の計画
+- シミュレーションエンジンの実装
+- ASIL計算モジュールの開発
+- GUIの拡張と改善
+- 包括的なテストスイートの作成
 
 ## テスト実行
 ```
@@ -89,4 +107,3 @@ pytest tests/
 
 ## 連絡先
 [ここに連絡先情報を記述します（オプション）]
-```
