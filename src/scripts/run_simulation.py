@@ -11,13 +11,7 @@ def process_row(row, config):
     sim_engine = SimulationEngine(config)
     sim_engine.load_data(row)
     sim_engine.run_simulation()
-    result = sim_engine.get_results()
-    for key in ['回避無し', 'C0', 'C1', 'C2']:
-        row[f'衝突有無[{key}]'] = result[key]['衝突有無']
-        row[f'衝突時刻[{key}]'] = result[key]['衝突時刻']
-        row[f'衝突位置[{key}]'] = result[key]['衝突位置']
-        row[f'有効衝突速度[{key}]'] = result[key]['有効衝突速度']
-    return row
+    return sim_engine.get_results()
 
 def process_batch(batch, config):
     with multiprocessing.Pool() as pool:
@@ -46,9 +40,15 @@ def run_simulations(input_file: str, output_file: str, batch_size: int = 1000):
          open(output_path, 'w', newline='', encoding='utf-8-sig') as outfile:
         
         reader = csv.DictReader(infile)
-        fieldnames = reader.fieldnames + [
-            f'{result}[{key}]' for key in ['回避無し', 'C0', 'C1', 'C2']
-            for result in ['衝突有無', '衝突時刻', '衝突位置', '有効衝突速度']
+        original_fieldnames = reader.fieldnames
+        result_fieldnames = [
+            '衝突有無', '衝突時刻', '衝突位置', '有効衝突速度'
+        ]
+        scenario_fieldnames = ['回避無し', 'C0', 'C1', 'C2']
+        
+        fieldnames = original_fieldnames + [
+            f'{result}[{scenario}]' for scenario in scenario_fieldnames
+            for result in result_fieldnames
         ]
         writer = csv.DictWriter(outfile, fieldnames=fieldnames)
         writer.writeheader()
@@ -58,15 +58,25 @@ def run_simulations(input_file: str, output_file: str, batch_size: int = 1000):
             batch.append(row)
             if len(batch) >= batch_size:
                 results = process_batch(batch, config)
-                writer.writerows(results)
+                for original_row, result_row in zip(batch, results):
+                    output_row = original_row.copy()
+                    for scenario in scenario_fieldnames:
+                        for result in result_fieldnames:
+                            output_row[f'{result}[{scenario}]'] = result_row[scenario][result]
+                    writer.writerow(output_row)
                 batch = []
 
         # 残りのデータを処理
         if batch:
             results = process_batch(batch, config)
-            writer.writerows(results)
+            for original_row, result_row in zip(batch, results):
+                output_row = original_row.copy()
+                for scenario in scenario_fieldnames:
+                    for result in result_fieldnames:
+                        output_row[f'{result}[{scenario}]'] = result_row[scenario][result]
+                writer.writerow(output_row)
 
     print(f"シミュレーション完了。結果は {output_path} に保存されました。")
-
+    
 if __name__ == "__main__":
     run_simulations('data/input/accel_in.csv', 'data/output/simulation_results.csv')

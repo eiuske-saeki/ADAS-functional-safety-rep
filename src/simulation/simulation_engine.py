@@ -24,6 +24,8 @@ class SimulationEngine:
         self.deceleration_jerk = config['deceleration_jerk']
         self.log_data: Dict[str, List[List[str]]] = {}
         self.record_id: str = ""
+        self.reaction_time: float = 0.0
+        self.evasive_actions: Dict[str, float] = {}
 
     def load_data(self, data: Dict[str, Any]):
         self.record_id = data.get('No', 'unknown')
@@ -48,19 +50,38 @@ class SimulationEngine:
         self.log_data = {key: [] for key in self.evasive_actions.keys()}
 
     def run_simulation(self):
+        scenarios = ['回避無し', 'C0', 'C1', 'C2']
         self.results = {}
-        for scenario, max_deceleration in self.evasive_actions.items():
-            self.results[scenario] = self.run_single_scenario(max_deceleration, scenario)
-        self.write_log_to_csv()
+        self.log_data = {scenario: [] for scenario in scenarios}  # ログデータの初期化
+
+        # 「回避無し」シナリオを最初に実行
+        self.results['回避無し'] = self.run_single_scenario(
+            self.evasive_actions['回避無し'], '回避無し')
+
+        # C0, C1, C2の順でシミュレーション
+        for scenario in scenarios[1:]:  # '回避無し'をスキップ
+            self.results[scenario] = self.run_single_scenario(
+                self.evasive_actions[scenario], scenario)
+            if self.results[scenario]['衝突有無'] == 'なし':
+                # 衝突が回避された場合、残りのシナリオをスキップ
+                for remaining_scenario in scenarios[scenarios.index(scenario)+1:]:
+                    self.results[remaining_scenario] = {
+                        '衝突有無': '不要',
+                        '衝突時刻': 'N/A',
+                        '衝突位置': 'N/A',
+                        '有効衝突速度': 'N/A'
+                    }
+                    # スキップされたシナリオのログにも「不要」を記録
+                    self.log_data[remaining_scenario].append(['不要'] * 11)  # ログの列数に合わせて調整
+                break
+
+        self.write_log_to_csv()  # シミュレーション後にログを書き込む
 
     def run_single_scenario(self, max_deceleration: float, scenario_name: str):
-        self.time = 0.0
-        self.following_vehicle.reset()
-        self.leading_vehicle.reset()
+        self.reset_simulation()
         collision_detected = False
         reaction_time_passed = False
-        
-        while not self.is_simulation_complete(collision_detected):
+        while not self.is_simulation_complete(collision_detected, scenario_name):
             if not reaction_time_passed:
                 self.apply_unintended_acceleration()
                 if self.time >= self.reaction_time:
@@ -145,8 +166,24 @@ class SimulationEngine:
                 '有効衝突速度': 'N/A'
             }
 
-    def is_simulation_complete(self, collision_detected: bool) -> bool:
-        return collision_detected or self.time >= self.max_simulation_time
+    def is_simulation_complete(self, collision_detected: bool, scenario_name: str) -> bool:
+        return (collision_detected or 
+                self.time >= self.max_simulation_time or 
+                (scenario_name != '回避無し' and self.is_safe_state_after_evasion()))
+
+    def is_safe_state_after_evasion(self):
+        return (self.time > self.reaction_time and 
+                self.following_vehicle.velocity < self.leading_vehicle.velocity)
+
+    def reset_simulation(self):
+        self.time = 0.0
+        self.following_vehicle.reset()
+        self.leading_vehicle.reset()
 
     def get_results(self) -> Dict[str, Any]:
-        return self.results
+        return {
+            '回避無し': self.results['回避無し'],
+            'C0': self.results['C0'],
+            'C1': self.results['C1'],
+            'C2': self.results['C2']
+        }

@@ -1,3 +1,5 @@
+# src/data_generation/data_generator.py
+
 import os
 from typing import Dict, Any, List, Generator
 from src.utils import functions
@@ -85,25 +87,9 @@ class DataGenerator:
             "車間距離[m]": float(f'{functions.kph_to_mps(float(v)) * float(t):.2f}') if float(v) > 0.0 else float(f'{functions.kph_to_mps(6) * float(t):.2f}'),
             "回避行動": "後続車減速",
             "回避行動パラメータ[回避無し]": float(evasiveset[0]),
-            "衝突有無[回避無し]" : None,
-            "衝突位置[回避無し]" : None,
-            "衝突時刻[回避無し]" : None,
-            "有効衝突速度[回避無し]" : None, 
             "回避行動パラメータ[C0]": float(evasiveset[1]),
-            "衝突有無[C0]" : None,
-            "衝突位置[C0]" : None,
-            "衝突時刻[C0]" : None,
-            "有効衝突速度[C0]" : None,
             "回避行動パラメータ[C1]": float(evasiveset[2]),
-            "衝突有無[C1]" : None,
-            "衝突位置[C1]" : None,
-            "衝突時刻[C1]" : None,
-            "有効衝突速度[C1]" : None,
             "回避行動パラメータ[C2]": float(evasiveset[3]),
-            "衝突有無[C2]" : None,
-            "衝突位置[C2]" : None,
-            "衝突時刻[C2]" : None,
-            "有効衝突速度[C2]" : None,
             "E": None,
             "C": None,
             "S": None,
@@ -127,7 +113,7 @@ class DataGenerator:
         try:
             data = list(self.generate_data(user_input))
             
-            output_dir = os.path.join('data', 'output')
+            output_dir = os.path.join('data', 'input')
             os.makedirs(output_dir, exist_ok=True)
             
             output_path = os.path.join(output_dir, "accel_in.csv")
