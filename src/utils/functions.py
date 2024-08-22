@@ -1,3 +1,6 @@
+# src/utils/functions.py
+
+
 def set_data(min_value: float, max_value: float, diff: float, data_set: list) -> list:
     """
     指定された範囲と間隔でデータセットを生成します。
@@ -61,3 +64,14 @@ def save_data_to_csv(data: list, filename: str = "output.csv"):
         writer = csv.DictWriter(f, fieldnames=data[0].keys())
         writer.writeheader()
         writer.writerows(data)
+
+def detect_collision(vehicle1_position: float, vehicle2_position: float, collision_threshold: float = 0.1) -> bool:
+    """
+    二つの車両の位置に基づいて衝突を検出します。
+
+    :param vehicle1_position: 1台目の車両の位置
+    :param vehicle2_position: 2台目の車両の位置
+    :param collision_threshold: 衝突とみなす距離のしきい値（デフォルト: 0.1メートル）
+    :return: 衝突が検出された場合はTrue、そうでない場合はFalse
+    """
+    return abs(vehicle1_position - vehicle2_position) < collision_threshold
