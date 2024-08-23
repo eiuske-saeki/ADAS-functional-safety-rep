@@ -1,16 +1,7 @@
-# Core dependencies
 numpy
 pandas
 matplotlib
 PyQt5
-
-# Testing
+tqdm
 pytest
-
-# Development tools (optional, can be commented out if not needed)
-# flake8
-# black
-
-# Additional dependencies (add as needed)
-# scipy  # If advanced scientific computing is required
-# openpyxl  # If Excel file support is needed with pandas
+scipy
