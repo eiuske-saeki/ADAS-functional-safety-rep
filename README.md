@@ -7,32 +7,7 @@
 - 多様なシナリオ（意図しない加速、減速、操舵）のシミュレーション
 - ASILの計算と評価
 - 結果の可視化と分析
-- ユーザーフレンドリーなGUIインターフェース
-
-## 最近の更新
-- data_generator.pyの改善：エラーハンドリングの強化、パフォーマンスの最適化
-- utils/functions.pyの修正：データ生成機能の信頼性向上
-
-## 使用方法
-
-### データ生成
-data_generator.pyを使用してシミュレーション用のデータを生成できます。
-
-1. 仮想環境をアクティベートします：
-   ```
-   myenv\Scripts\activate  # Windowsの場合
-   ```
-
-2. プロジェクトのルートディレクトリに移動します。
-
-3. 以下のコマンドを実行します：
-   ```
-   python src/data_generation/data_generator.py
-   ```
-
-4. 生成されたデータは `data/output/accel_in.csv` に保存されます。
-
-注意: データ生成パラメータをカスタマイズする場合は、data_generator.py内のuser_input辞書を編集してください。
+- 効率的な大規模データ処理
 
 ## プロジェクト構造
 ```
@@ -47,10 +22,10 @@ ADAS-functional-safety-rep/
 │   ├── data_generation/
 │   ├── gui/
 │   ├── models/
+│   ├── scripts/  # ユーティリティスクリプトとサンプル実行スクリプト
 │   ├── simulation/
 │   ├── utils/
-│   ├── visualization/
-│   └── main.py   # アプリケーションのエントリーポイント
+│   └── visualization/
 ├── tests/        # テストコード
 ├── .gitignore
 ├── README.md
@@ -60,14 +35,15 @@ ADAS-functional-safety-rep/
 ## インストール方法
 1. リポジトリをクローンします：
    ```
-   git clone https://github.com/eiuske-saeki/ADAS-functional-safety-rep.git
+   git clone https://github.com/your-username/ADAS-functional-safety-rep.git
    cd ADAS-functional-safety-rep
    ```
 
 2. 仮想環境を作成し、アクティベートします：
    ```
    python -m venv myenv
-   myenv\Scripts\activate  # Windowsの場合
+   source myenv/bin/activate  # Unix系の場合
+   myenv\Scripts\activate     # Windowsの場合
    ```
 
 3. 必要なパッケージをインストールします：
@@ -75,16 +51,35 @@ ADAS-functional-safety-rep/
    pip install -r requirements.txt
    ```
 
+## 使用方法
+
+### データ生成
+カスタムデータセットを生成するには：
+```
+python src/data_generation/data_generator.py
+```
+生成されたデータは `data/input/accel_in.csv` に保存されます。
+
+### シミュレーションの実行
+1. `src/scripts/run_simulation.py` を実行してシミュレーションを開始します：
+   ```
+   python src/scripts/run_simulation.py
+   ```
+
+2. シミュレーション結果は `data/output/simulation_results.csv` に保存されます。
+3. 詳細なログは `data/output/logs/` ディレクトリに保存されます。
+
 ## 開発
 - `src/` ディレクトリには、各機能モジュールが含まれています。
 - `tests/` ディレクトリには、対応するテストファイルがあります。
 - 新しい機能を追加する場合は、適切なモジュールに実装し、対応するテストを作成してください。
 
-## 今後の計画
-- シミュレーションエンジンの実装
-- ASIL計算モジュールの開発
-- GUIの拡張と改善
-- 包括的なテストスイートの作成
+## 最近の更新
+- シミュレーションエンジンの最適化：タイムステップを0.1秒に変更
+- マルチプロセッシングの導入による並列処理の実現
+- 回避行動の段階的評価の実装（C0で回避成功時にC1,C2をスキップ）
+- データ処理の改善：バッチ処理の導入（1000行ずつデータを読み込み）
+- ログ処理の改善と詳細な出力
 
 ## テスト実行
 ```
