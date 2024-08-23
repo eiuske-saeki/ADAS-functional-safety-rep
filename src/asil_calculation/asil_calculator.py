@@ -2,48 +2,61 @@ from typing import Dict, Any
 
 class ASILCalculator:
     def __init__(self):
-        # 初期化コード（必要に応じて）
-        pass
+        self.severity_thresholds = {
+            'S0': 0,
+            'S1': 10,
+            'S2': 20,
+            'S3': 35
+        }
+        self.exposure_levels = {
+            'E1': 'very low probability',
+            'E2': 'low probability',
+            'E3': 'medium probability',
+            'E4': 'high probability'
+        }
+        self.controllability_levels = {
+            'C0': 0,
+            'C1': 0.4,
+            'C2': 0.8,
+            'C3': 1.0
+        }
+        self.asil_matrix = {
+            # ASIL決定マトリックスをここに実装
+        }
 
     def calculate(self, simulation_results: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        シミュレーション結果に基づいてASILを計算します。
+        s_value = self.calculate_severity(simulation_results)
+        e_value = self.calculate_exposure(simulation_results)
+        c_value = self.calculate_controllability(simulation_results)
+        asil = self.determine_asil(s_value, e_value, c_value)
+        
+        return {
+            'ASIL': asil,
+            'S': s_value,
+            'E': e_value,
+            'C': c_value
+        }
 
-        :param simulation_results: シミュレーション結果
-        :return: ASIL計算結果
-        """
-        # ASIL計算ロジックをここに実装
-        # 例:
-        # asil_results = {'ASIL': ..., 'S': ..., 'E': ..., 'C': ...}
-        # return asil_results
-        pass
+    def calculate_severity(self, collision_data: Dict[str, Any]) -> str:
+        impact_velocity = collision_data.get('有効衝突速度[C0]', 0)
+        for level, threshold in sorted(self.severity_thresholds.items(), key=lambda x: x[1], reverse=True):
+            if impact_velocity >= threshold:
+                return level
+        return 'S0'
 
-    def calculate_severity(self, collision_data: Dict[str, Any]) -> int:
-        """
-        衝突データに基づいて重大度（S）を計算します。
+    def calculate_exposure(self, scenario_data: Dict[str, Any]) -> str:
+        # この関数の実装はシナリオの特性に基づいて行う必要があります
+        # 現在は仮の実装です
+        return 'E2'
 
-        :param collision_data: 衝突データ
-        :return: 重大度値
-        """
-        # 重大度計算ロジックをここに実装
-        pass
+    def calculate_controllability(self, vehicle_data: Dict[str, Any]) -> str:
+        deceleration = vehicle_data.get('回避行動パラメータ[C0]', 0)
+        for level, threshold in sorted(self.controllability_levels.items(), key=lambda x: x[1]):
+            if deceleration <= threshold:
+                return level
+        return 'C3'
 
-    def calculate_exposure(self, scenario_data: Dict[str, Any]) -> int:
-        """
-        シナリオデータに基づく暴露（E）を計算します。
-
-        :param scenario_data: シナリオデータ
-        :return: 暴露値
-        """
-        # 暴露計算ロジックをここに実装
-        pass
-
-    def calculate_controllability(self, vehicle_data: Dict[str, Any]) -> int:
-        """
-        車両データに基づく制御可能性（C）を計算します。
-
-        :param vehicle_data: 車両データ
-        :return: 制御可能性値
-        """
-        # 制御可能性計算ロジックをここに実装
-        pass
+    def determine_asil(self, s: str, e: str, c: str) -> str:
+        # ASIL決定マトリックスを使用してASILを決定
+        # この関数はself.asil_matrixを使用して実装する必要があります
+        return 'ASIL A'  # 仮の戻り値
