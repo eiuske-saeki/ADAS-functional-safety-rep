@@ -7,32 +7,36 @@
 - 多様なシナリオ（意図しない加速、減速、操舵）のシミュレーション
 - ASILの計算と評価
 - 結果の可視化と分析
-- 効率的な大規模データ処理
+- ユーザーフレンドリーなGUIインターフェース
 
 ## プロジェクト構造
 ```
 ADAS-functional-safety-rep/
-├── data/
-│   ├── input/    # 入力データファイル
-│   └── output/   # シミュレーション結果出力
-├── dev_log/      # 開発ログ
-├── docs/         # プロジェクトドキュメント
-├── src/          # ソースコード
-│   ├── asil_calculation/
+├── src/
 │   ├── data_generation/
-│   ├── gui/
-│   ├── models/
-│   ├── scripts/  # ユーティリティスクリプトとサンプル実行スクリプト
+│   │   └── data_generator.py
 │   ├── simulation/
+│   │   └── simulation_engine.py
+│   ├── asil_calculation/
+│   ├── visualization/
+│   ├── gui/
+│   │   └── gui.py
 │   ├── utils/
-│   └── visualization/
-├── tests/        # テストコード
+│   │   └── functions.py
+│   └── scripts/
+│       └── run_simulation.py
+├── tests/
+├── data/
+│   ├── input/
+│   └── output/
+├── docs/
+├── dev_log/
 ├── .gitignore
 ├── README.md
 └── requirements.txt
 ```
 
-## インストール方法
+## セットアップ手順
 1. リポジトリをクローンします：
    ```
    git clone https://github.com/your-username/ADAS-functional-safety-rep.git
@@ -53,35 +57,45 @@ ADAS-functional-safety-rep/
 
 ## 使用方法
 
+### 環境設定
+スクリプトを実行する前に、必ずプロジェクトのルートディレクトリで以下のコマンドを実行してください：
+
+Windowsの場合:
+```
+set PYTHONPATH=%PYTHONPATH%;%CD%
+```
+
+Unix系の場合:
+```
+export PYTHONPATH=$PYTHONPATH:$(pwd)
+```
+
 ### データ生成
-カスタムデータセットを生成するには：
+カスタムシミュレーションデータを生成するには：
 ```
 python src/data_generation/data_generator.py
 ```
 生成されたデータは `data/input/accel_in.csv` に保存されます。
 
 ### シミュレーションの実行
-1. `src/scripts/run_simulation.py` を実行してシミュレーションを開始します：
-   ```
-   python src/scripts/run_simulation.py
-   ```
+`src/scripts/run_simulation.py` を実行してシミュレーションを開始します：
+```
+python src/scripts/run_simulation.py
+```
 
-2. シミュレーション結果は `data/output/simulation_results.csv` に保存されます。
-3. 詳細なログは `data/output/logs/` ディレクトリに保存されます。
+シミュレーション結果は `data/output/simulation_results.csv` に保存されます。
 
-## 開発
+注意: これらのスクリプトは、必ずプロジェクトのルートディレクトリから実行してください。
+
+## 開発ガイドライン
 - `src/` ディレクトリには、各機能モジュールが含まれています。
 - `tests/` ディレクトリには、対応するテストファイルがあります。
 - 新しい機能を追加する場合は、適切なモジュールに実装し、対応するテストを作成してください。
-
-## 最近の更新
-- シミュレーションエンジンの最適化：タイムステップを0.1秒に変更
-- マルチプロセッシングの導入による並列処理の実現
-- 回避行動の段階的評価の実装（C0で回避成功時にC1,C2をスキップ）
-- データ処理の改善：バッチ処理の導入（1000行ずつデータを読み込み）
-- ログ処理の改善と詳細な出力
+- コードの変更を行う前に、新しいブランチを作成してください。
+- コミットメッセージは明確で簡潔にしてください。
 
 ## テスト実行
+テストを実行するには、以下のコマンドを使用します：
 ```
 pytest tests/
 ```
@@ -97,8 +111,15 @@ pytest tests/
 4. ブランチにプッシュします（`git push origin feature/AmazingFeature`）。
 5. プルリクエストを作成します。
 
+## トラブルシューティング
+- スクリプトの実行時にモジュールが見つからないエラーが発生する場合は、環境変数 `PYTHONPATH` が正しく設定されているか確認してください。
+- データ生成やシミュレーション実行時にエラーが発生した場合は、`data/` ディレクトリの権限を確認してください。
+
 ## ライセンス
 [ここに適切なライセンス情報を記述します]
 
 ## 連絡先
 [ここに連絡先情報を記述します（オプション）]
+
+## 謝辞
+[必要に応じて、貢献者や使用したライブラリなどへの謝辞を記述します]
