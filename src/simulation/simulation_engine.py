@@ -6,6 +6,7 @@ from typing import Dict, List, Any
 from enum import Enum
 from src.models.vehicle_model import Vehicle
 from src.utils import functions
+from src.asil_calculation.asil_calculator import ASILCalculator
 
 class ScenarioType(Enum):
     UNINTENDED_ACCELERATION = "unintended_acceleration"
@@ -29,6 +30,7 @@ class SimulationEngine:
         self.record_id: str = ""  # シミュレーションの記録ID、これで結果を識別するの
         self.reaction_time: float = 0.0  # ドライバーの反応時間、リアルな感じを出すためにあるんだって
         self.evasive_actions: Dict[str, float] = {}  # 回避行動のパラメータ、いろんなパターンを試すよ
+        self.asil_calculator = ASILCalculator()
 
     def load_data(self, data: Dict[str, Any]):
         # ウェーイ！車のデータをゲットして、シミュレーションの準備をしちゃうよ～

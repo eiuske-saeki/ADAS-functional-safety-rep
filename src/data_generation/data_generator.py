@@ -1,20 +1,19 @@
 # src/data_generation/data_generator.py
 
 import os
-from typing import Dict, Any, List, Generator
+from typing import Dict, Any, List
 from src.utils import functions
 
 class DataGenerator:
     def __init__(self):
         pass
-        # 何もないけど、これがないとクラスっぽくないからね～
 
-    def generate_data(self, user_input: Dict[str, Any]) -> Generator[Dict[str, Any], None, None]:
+    def generate_data(self, user_input: Dict[str, Any]) -> List[Dict[str, Any]]:
         """
         ユーザー入力使ってシミュレーションデータをバリバリ作っちゃうよ～
 
         :param user_input: ユーザーが決めたパラメータ、超大事！
-        :return: 作ったデータのジェネレータ、省メモリでイケてるでしょ？
+        :return: 作ったデータのリスト、全部まとめて返すよ！
         :raises ValueError: ユーザー入力がおかしかったらエラー出すよ～気をつけてね！
         """
         self._validate_user_input(user_input)  # まずは入力チェック、間違ってたらダメだからね！
@@ -29,6 +28,8 @@ class DataGenerator:
         evasiveset = user_input['evasiveset']
         no = 1  # データのナンバリング、1から始まるよ～
 
+        data = []  # ここにデータを溜めていくよ～
+
         # ここからがメインのループ、全パターンを網羅しちゃうよ！
         for kg in weight:
             for rt in rtime:
@@ -41,8 +42,10 @@ class DataGenerator:
                             continue  # 無効なシナリオはスキップ、変なデータは作らないよ！
 
                         for acc in accset:
-                            yield self._create_data_point(no, kg, v, acc, rt, t, evasiveset)
+                            data.append(self._create_data_point(no, kg, v, acc, rt, t, evasiveset))
                             no += 1  # ナンバーを増やして次へ、どんどん作るよ～
+
+        return data  # 作ったデータを全部まとめて返すよ～
 
     def _validate_user_input(self, user_input: Dict[str, Any]) -> None:
         """ユーザー入力をチェックしちゃうよ～間違ってたらダメだからね！"""
@@ -114,7 +117,7 @@ class DataGenerator:
         }
         
         try:
-            data = list(self.generate_data(user_input))  # データを生成
+            data = self.generate_data(user_input)  # データを生成
             
             output_dir = os.path.join('data', 'input')
             os.makedirs(output_dir, exist_ok=True)  # 出力ディレクトリを作成
