@@ -82,6 +82,11 @@ python src/data_generation/data_generator.py
 ```
 python src/scripts/run_simulation.py
 ```
+`src/main.py` を実行してシミュレーションを開始します：
+
+```
+python src/main.py
+```
 
 シミュレーション結果は `data/output/simulation_results.csv` に保存されます。
 
