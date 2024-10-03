@@ -1,27 +1,32 @@
 import tkinter as tk
-from tkinter import ttk, filedialog
+from tkinter import ttk, filedialog, messagebox, simpledialog
 import sys
 import os
 import csv
 from tqdm import tqdm
+import pandas as pd
 
 from src.data_generation.data_generator import DataGenerator
 from src.simulation.simulation_engine import SimulationEngine
 from src.asil_calculation.asil_calculator import ASILCalculator
 from src.utils import functions
+from src.visualization.asil_map_generator import ASILMapGenerator
 
 class ADASSimulationApp:
     def __init__(self, root):
         self.root = root
         self.data_generator = DataGenerator()
-        self.init_ui()
         self.generated_data = None
         self.output_path = None
+        self.asil_map_generator = ASILMapGenerator()
+        self.csv_data = None
+        self.csv_columns = []
+        self.init_ui()
 
     def init_ui(self):
         """GUIの初期化と各要素の配置を行う"""
         self.root.title('ADAS Functional Safety Simulation Tool')
-        self.root.geometry('800x900')  # ウィンドウサイズを大きくした
+        self.root.geometry('800x1000')  # ウィンドウサイズを大きくした
 
         frame = ttk.Frame(self.root, padding="10")
         frame.grid(column=0, row=0, sticky=(tk.W, tk.E, tk.N, tk.S))
@@ -76,15 +81,42 @@ class ADASSimulationApp:
         asil_button = ttk.Button(frame, text='Run ASIL Calculation', command=self.run_asil_calculation)
         asil_button.grid(column=1, row=len(params)+len(sim_params)+4, pady=5)
 
+        # CSVファイル読み込みボタンを追加
+        load_csv_button = ttk.Button(frame, text='Load CSV File', command=self.load_csv_file)
+        load_csv_button.grid(column=1, row=len(params)+len(sim_params)+5, pady=5)
+
+        # パラメータ選択用のフレームを追加
+        self.param_frame = ttk.LabelFrame(frame, text="ASIL Map Parameters")
+        self.param_frame.grid(column=0, row=len(params)+len(sim_params)+6, columnspan=2, pady=10, padx=10, sticky="ew")
+        self.create_parameter_selection()
+
+        # ASILマップ生成ボタンを移動
+        generate_asil_map_button = ttk.Button(frame, text='Generate ASIL Map', command=self.generate_asil_map)
+        generate_asil_map_button.grid(column=1, row=len(params)+len(sim_params)+7, pady=5)
+
         # 結果表示用のラベル、プログレスバー、テキストボックス
         self.result_label = ttk.Label(frame, text='Results will be displayed here')
-        self.result_label.grid(column=0, row=len(params)+len(sim_params)+5, columnspan=2, pady=5)
+        self.result_label.grid(column=0, row=len(params)+len(sim_params)+8, columnspan=2, pady=5)
 
         self.progress_bar = ttk.Progressbar(frame, orient="horizontal", length=300, mode="determinate")
-        self.progress_bar.grid(column=0, row=len(params)+len(sim_params)+6, columnspan=2, pady=5)
+        self.progress_bar.grid(column=0, row=len(params)+len(sim_params)+9, columnspan=2, pady=5)
 
         self.result_text = tk.Text(frame, height=10, width=80)
-        self.result_text.grid(column=0, row=len(params)+len(sim_params)+7, columnspan=2, pady=5)
+        self.result_text.grid(column=0, row=len(params)+len(sim_params)+10, columnspan=2, pady=5)
+
+    def create_parameter_selection(self):
+        ttk.Label(self.param_frame, text="X-axis:").grid(column=0, row=0, padx=5, pady=5)
+        self.x_param = ttk.Combobox(self.param_frame, state="readonly")
+        self.x_param.grid(column=1, row=0, padx=5, pady=5)
+
+        ttk.Label(self.param_frame, text="Y-axis:").grid(column=0, row=1, padx=5, pady=5)
+        self.y_param = ttk.Combobox(self.param_frame, state="readonly")
+        self.y_param.grid(column=1, row=1, padx=5, pady=5)
+
+        ttk.Label(self.param_frame, text="Color map:").grid(column=0, row=2, padx=5, pady=5)
+        self.color_map = ttk.Combobox(self.param_frame, state="readonly", values=list(self.asil_map_generator.color_maps.keys()))
+        self.color_map.grid(column=1, row=2, padx=5, pady=5)
+        self.color_map.set('1')  # デフォルト値を設定
 
     def generate_data(self):
         """データ生成を実行し、CSVファイルに保存する"""
@@ -250,8 +282,50 @@ class ADASSimulationApp:
             import traceback
             self.result_text.insert(tk.END, f"詳細なエラー情報:\n{traceback.format_exc()}\n")
 
+    def load_csv_file(self):
+        file_path = filedialog.askopenfilename(
+            title="Select CSV file for ASIL Map",
+            filetypes=[("CSV files", "*.csv")]
+        )
+        if file_path:
+            try:
+                self.csv_data = pd.read_csv(file_path)
+                self.csv_columns = list(self.csv_data.columns)
+                self.x_param['values'] = self.csv_columns
+                self.y_param['values'] = self.csv_columns
+                self.result_text.insert(tk.END, f"CSV file loaded: {file_path}\n")
+                messagebox.showinfo("Success", "CSV file loaded successfully")
+            except Exception as e:
+                self.result_text.insert(tk.END, f"Error loading CSV file: {str(e)}\n")
+                messagebox.showerror("Error", f"Failed to load CSV file: {str(e)}")
+
+    def generate_asil_map(self):
+        if self.csv_data is None:
+            messagebox.showwarning("Warning", "Please load a CSV file first")
+            return
+
+        x_param = self.x_param.get()
+        y_param = self.y_param.get()
+        color_choice = self.color_map.get()
+
+        if not x_param or not y_param:
+            messagebox.showwarning("Warning", "Please select both X and Y parameters")
+            return
+
+        output_dir = os.path.join('data', 'output', 'asil_maps')
+        os.makedirs(output_dir, exist_ok=True)
+
+        result = self.asil_map_generator.generate_asil_map(
+            data=self.csv_data,  # ここを変更
+            x_param=x_param,
+            y_param=y_param,
+            color_choice=color_choice,
+            output_dir=output_dir
+        )
+
+        self.result_text.insert(tk.END, f"ASIL Map Generation Result:\n{result}\n")
+
 def main():
-    """メイン関数：アプリケーションを起動する"""
     root = tk.Tk()
     app = ADASSimulationApp(root)
     root.mainloop()

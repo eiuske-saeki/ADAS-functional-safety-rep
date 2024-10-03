@@ -18,13 +18,15 @@ ADAS-functional-safety-rep/
 │   ├── simulation/
 │   │   └── simulation_engine.py
 │   ├── asil_calculation/
+│   │   └── asil_calculator.py
 │   ├── visualization/
 │   ├── gui/
 │   │   └── gui.py
 │   ├── utils/
 │   │   └── functions.py
-│   └── scripts/
-│       └── run_simulation.py
+│   ├── scripts/
+│   │   └── run_simulation.py
+│   └── main.py
 ├── tests/
 ├── data/
 │   ├── input/
@@ -70,27 +72,26 @@ Unix系の場合:
 export PYTHONPATH=$PYTHONPATH:$(pwd)
 ```
 
-### データ生成
-カスタムシミュレーションデータを生成するには：
-```
-python src/data_generation/data_generator.py
-```
-生成されたデータは `data/input/accel_in.csv` に保存されます。
-
 ### シミュレーションの実行
-`src/scripts/run_simulation.py` を実行してシミュレーションを開始します：
-```
-python src/scripts/run_simulation.py
-```
-`src/main.py` を実行してシミュレーションを開始します：
-
+ツールを起動し、シミュレーションを開始するには：
 ```
 python src/main.py
 ```
 
+このコマンドを実行すると、グラフィカルユーザーインターフェース（GUI）が立ち上がります。GUIを通じて、データ生成、シミュレーションの実行、結果の表示などの操作を行うことができます。
+
 シミュレーション結果は `data/output/simulation_results.csv` に保存されます。
 
-注意: これらのスクリプトは、必ずプロジェクトのルートディレクトリから実行してください。
+注意: このスクリプトは、必ずプロジェクトのルートディレクトリから実行してください。
+
+<!-- 
+### データ生成
+カスタムシミュレーションデータを直接生成するには：
+```
+python src/data_generation/data_generator.py
+```
+生成されたデータは `data/input/accel_in.csv` に保存されます。
+-->
 
 ## 開発ガイドライン
 - `src/` ディレクトリには、各機能モジュールが含まれています。
@@ -119,6 +120,10 @@ pytest tests/
 ## トラブルシューティング
 - スクリプトの実行時にモジュールが見つからないエラーが発生する場合は、環境変数 `PYTHONPATH` が正しく設定されているか確認してください。
 - データ生成やシミュレーション実行時にエラーが発生した場合は、`data/` ディレクトリの権限を確認してください。
+- 現在、`data/output/` フォルダが事前に存在していないとエラーが発生する場合があります。エラーが発生した場合は、このフォルダが存在することを確認してください。
+- ツールで使用する `data/output/` フォルダや `data/input/` フォルダをユーザーが開いていると、ツールが正常に動作しない場合があります。シミュレーション実行前にこれらのフォルダを閉じていることを確認してください。
+- 長時間の使用やデータ処理後に動作が遅くなる場合は、メモリの解放が適切に行われていない可能性があります（現在調査中）。このような症状が見られた場合は、ツールを再起動してみてください。
+- GUIの起動に問題がある場合は、必要なライブラリ（特にtkinter）が正しくインストールされているか確認してください。
 
 ## ライセンス
 [ここに適切なライセンス情報を記述します]
