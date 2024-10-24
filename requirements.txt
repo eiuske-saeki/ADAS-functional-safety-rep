@@ -1,26 +1,18 @@
-colorama==0.4.6
-contourpy==1.2.1
-cycler==0.12.1
-fonttools==4.53.1
-iniconfig==2.0.0
-japanize-matplotlib==1.1.3
-kiwisolver==1.4.5
-matplotlib==3.9.2
-numpy==2.1.0
-packaging==24.1
-pandas==2.2.2
-pillow==10.4.0
-pluggy==1.5.0
-pyparsing==3.1.2
-PyQt5==5.15.11
-PyQt5-Qt5==5.15.2
-PyQt5_sip==12.15.0
-pytest==8.3.2
-python-dateutil==2.9.0.post0
-pytz==2024.1
-scipy==1.14.1
-seaborn==0.13.2
-setuptools==75.1.0
-six==1.16.0
-tqdm==4.66.5
-tzdata==2024.1
+# Core dependencies
+numpy
+pandas
+matplotlib
+PyQt5
+seaborn
+scipy  # If advanced scientific computing is required
+
+# Testing
+tqdm
+pytest
+
+# Development tools (optional, can be commented out if not needed)
+# flake8
+# black
+
+# Additional dependencies (add as needed)
+# openpyxl  # If Excel file support is needed with pandas
