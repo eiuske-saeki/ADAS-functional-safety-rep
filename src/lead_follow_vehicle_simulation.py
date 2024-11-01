@@ -1,9 +1,10 @@
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import messagebox, filedialog
 import matplotlib.pyplot as plt
 import csv
 import os
 import traceback
+import bisect
 
 class SimulationApp:
     def __init__(self, master):
@@ -11,22 +12,29 @@ class SimulationApp:
         master.title("Vehicle Simulation Tool")
 
         # パラメータ入力用のラベルとエントリ（デフォルト値を追加）
-        self.create_label_entry("Maximum Acceleration (G):", 0, default_value=0.95)
-        self.create_label_entry("Acceleration Jerk (G/s):", 1, default_value=5.56)
-        self.create_label_entry("Maximum Deceleration (G):", 2, default_value=1.0)
-        self.create_label_entry("Deceleration Jerk (G/s):", 3, default_value=2.5)
-        self.create_label_entry("Initial Distance (m):", 4, default_value=18.06)
-        self.create_label_entry("Initial Speed (km/h):", 5, default_value=25)
-        self.create_label_entry("Deceleration Start Time (s):", 6, default_value=1.0)
-        self.create_label_entry("Time Step (s):", 7, default_value=0.01)
-        self.create_label_entry("Acceleration Threshold Speed (km/h):", 8, default_value=70.0)
-        self.create_label_entry("New Maximum Acceleration (G):", 9, default_value=0.90)
-        self.create_label_entry("Lead Vehicle Weight (kg):", 10, default_value=2500.0)
-        self.create_label_entry("Following Vehicle Weight (kg):", 11, default_value=1500.0)
+        self.create_label_entry("Acceleration Jerk (G/s):", 0, default_value=5.56)
+        self.create_label_entry("Maximum Deceleration (G):", 1, default_value=1.0)
+        self.create_label_entry("Deceleration Jerk (G/s):", 2, default_value=2.5)
+        self.create_label_entry("Initial Distance (m):", 3, default_value=18.06)
+        self.create_label_entry("Initial Speed (km/h):", 4, default_value=25)
+        self.create_label_entry("Deceleration Start Time (s):", 5, default_value=1.0)
+        self.create_label_entry("Time Step (s):", 6, default_value=0.1)
+        self.create_label_entry("Lead Vehicle Weight (kg):", 7, default_value=2500.0)
+        self.create_label_entry("Following Vehicle Weight (kg):", 8, default_value=1500.0)
+        self.create_label_entry("Gradient Acceleration (G):", 9, default_value=0.0)  # 新しい入力フィールド
+
+        # データファイルの選択ボタン
+        self.data_file_label = tk.Label(self.master, text="Acceleration Data File:")
+        self.data_file_label.grid(row=10, column=0, sticky=tk.W)
+        self.data_file_path = tk.StringVar()
+        self.data_file_entry = tk.Entry(self.master, textvariable=self.data_file_path, width=40)
+        self.data_file_entry.grid(row=10, column=1)
+        self.data_file_button = tk.Button(self.master, text="Browse", command=self.browse_data_file)
+        self.data_file_button.grid(row=10, column=2)
 
         # シミュレーション開始ボタン
         self.start_button = tk.Button(master, text="Start Simulation", command=self.run_simulation)
-        self.start_button.grid(row=12, column=0, columnspan=2)
+        self.start_button.grid(row=11, column=0, columnspan=3)
 
     def create_label_entry(self, text, row, default_value=""):
         label = tk.Label(self.master, text=text)
@@ -36,21 +44,33 @@ class SimulationApp:
         entry.insert(0, str(default_value))  # デフォルト値を入力欄に挿入
         setattr(self, f"entry_{row}", entry)
 
+    def browse_data_file(self):
+        file_path = filedialog.askopenfilename(
+            filetypes=[("CSV files", "*.csv"), ("All files", "*.*")]
+        )
+        if file_path:
+            self.data_file_path.set(file_path)
+
     def run_simulation(self):
         try:
             # パラメータの取得と変換
-            max_accel = float(self.entry_0.get()) * 9.80665  # Gをm/s^2に変換
-            accel_jerk = float(self.entry_1.get()) * 9.80665  # G/sをm/s^3に変換
-            max_decel = float(self.entry_2.get()) * 9.80665
-            decel_jerk = float(self.entry_3.get()) * 9.80665
-            distance = float(self.entry_4.get())
-            initial_speed = float(self.entry_5.get()) / 3.6  # km/hをm/sに変換
-            decel_start_time = float(self.entry_6.get())
-            time_step = float(self.entry_7.get())
-            accel_threshold_speed = float(self.entry_8.get()) / 3.6  # km/hをm/sに変換
-            new_max_accel = float(self.entry_9.get()) * 9.80665  # Gをm/s^2に変換
-            m1 = float(self.entry_10.get())  # 先行車の重量
-            m2 = float(self.entry_11.get())  # 後続車の重量
+            accel_jerk = float(self.entry_0.get()) * 9.80665  # G/sをm/s^3に変換
+            max_decel = float(self.entry_1.get()) * 9.80665
+            decel_jerk = float(self.entry_2.get()) * 9.80665
+            distance = float(self.entry_3.get())
+            initial_speed_kph = float(self.entry_4.get())
+            initial_speed = initial_speed_kph / 3.6  # km/hをm/sに変換
+            decel_start_time = float(self.entry_5.get())
+            time_step = float(self.entry_6.get())
+            m1 = float(self.entry_7.get())  # 先行車の重量
+            m2 = float(self.entry_8.get())  # 後続車の重量
+            gradient_accel = float(self.entry_9.get()) * 9.80665  # Gをm/s^2に変換
+            data_file = self.data_file_path.get()
+
+            # データファイルの確認
+            if not data_file:
+                messagebox.showerror("Input Error", "Please select an acceleration data file.")
+                return
 
             # 入力値のバリデーション
             if time_step <= 0:
@@ -59,6 +79,14 @@ class SimulationApp:
             if m1 <= 0 or m2 <= 0:
                 messagebox.showerror("Input Error", "Vehicle weights must be greater than zero.")
                 return
+
+            # データファイルの読み込み
+            accel_data = self.load_acceleration_data(data_file, initial_speed_kph)
+            if accel_data is None:
+                return  # エラーが表示されているので処理を中断
+
+            times_in_data = accel_data['times']
+            max_accels_in_data = accel_data['max_accels']  # G単位
 
             # シミュレーションの初期化
             time = 0.0
@@ -70,8 +98,6 @@ class SimulationApp:
             decel = 0.0
             accelerations = [0.0]
             times = [0.0]
-
-            current_max_accel = max_accel
 
             collision_occurred = False
             collision_time = 0.0  # collision_timeを初期化
@@ -89,9 +115,9 @@ class SimulationApp:
                     speeds_lead.append(speeds_lead[-1])
                     positions_lead.append(positions_lead[-1] + speeds_lead[-1] * time_step)
 
-                    # 速度がしきい値に達したら最大加速度を変更
-                    if speeds_follow[-1] >= accel_threshold_speed:
-                        current_max_accel = new_max_accel
+                    # 時間に対応する最大加速度をデータから取得（G単位）
+                    current_max_accel_G = self.get_max_accel_from_data(time, times_in_data, max_accels_in_data)
+                    current_max_accel = current_max_accel_G * 9.80665  # m/s^2に変換
 
                     # 加速フェーズ
                     if accel < current_max_accel:
@@ -113,7 +139,7 @@ class SimulationApp:
                         decel = 0.0
 
                     # 総加速度
-                    net_accel = accel - decel
+                    net_accel = accel - decel + gradient_accel  # 勾配加速度を加算
                     accelerations.append(net_accel)
 
                     # 後続車の速度と位置の更新
@@ -129,7 +155,7 @@ class SimulationApp:
                         "Following Position (m)": positions_follow[-1],
                         "Lead Speed (m/s)": speeds_lead[-1],
                         "Following Speed (m/s)": speeds_follow[-1],
-                        "Acceleration (m/s^2)": net_accel  # '²' を '^2' に変更
+                        "Acceleration (m/s^2)": net_accel
                     })
 
                     # 衝突判定
@@ -167,13 +193,14 @@ class SimulationApp:
                     # 有効衝突速度の計算
                     d = (m1 * v2 + m2 * v1) / (m1 + m2)
                     effective_collision_speed = max(abs(v1 - d), abs(v2 - d))
-                    effective_collision_speed *= 3.6  # m/sをkm/hに変換
+                    effective_collision_speed *= (3600 / 1000)  # m/sをkm/hに変換
+
                     # 結果の表示
                     messagebox.showinfo(
                         "Result",
                         f"Vehicles have collided.\n"
                         f"Time until collision: {collision_time:.2f} s\n"
-                        f"Effective Collision Speed: {effective_collision_speed:.2f} m/s"
+                        f"Effective Collision Speed: {effective_collision_speed:.2f} km/h"
                     )
                 except Exception as e:
                     messagebox.showerror("Calculation Error", f"An error occurred during collision calculation:\n{str(e)}")
@@ -204,6 +231,55 @@ class SimulationApp:
             messagebox.showerror("Error", f"An unexpected error occurred:\n{str(e)}")
             traceback.print_exc()
 
+    def load_acceleration_data(self, data_file, initial_speed_kph):
+        try:
+            with open(data_file, mode='r', encoding='utf-8') as csvfile:
+                reader = csv.reader(csvfile)
+                headers = next(reader)
+
+                # 初期速度に対応する列のインデックスを取得
+                target_speed_col = None
+                for idx, header in enumerate(headers):
+                    if header.strip() == f"初速度({initial_speed_kph}kph)":
+                        target_speed_col = idx
+                        break
+
+                if target_speed_col is None:
+                    messagebox.showerror("Data Error", f"No data for initial speed {initial_speed_kph} kph.")
+                    return None
+
+                times = []
+                max_accels = []
+
+                for row in reader:
+                    if not row:
+                        continue
+                    time = float(row[0].strip())
+                    max_accel = float(row[target_speed_col].strip())
+                    times.append(time)
+                    max_accels.append(max_accel)  # G単位
+
+                return {'times': times, 'max_accels': max_accels}
+
+        except Exception as e:
+            messagebox.showerror("File Error", f"An error occurred while reading data file:\n{str(e)}")
+            traceback.print_exc()
+            return None
+
+    def get_max_accel_from_data(self, time, times_in_data, max_accels_in_data):
+        # 時間に対応する最大加速度を取得（補間）
+        if time <= times_in_data[0]:
+            return max_accels_in_data[0]
+        elif time >= times_in_data[-1]:
+            return max_accels_in_data[-1]
+        else:
+            idx = bisect.bisect_left(times_in_data, time)
+            t1, t2 = times_in_data[idx - 1], times_in_data[idx]
+            a1, a2 = max_accels_in_data[idx - 1], max_accels_in_data[idx]
+            # 線形補間
+            max_accel = a1 + (a2 - a1) * (time - t1) / (t2 - t1)
+            return max_accel
+
     def plot_results(self, times, positions_lead, positions_follow, speeds_follow, accelerations):
         fig, axs = plt.subplots(3, 1, figsize=(10, 8))
 
@@ -221,7 +297,7 @@ class SimulationApp:
         # 加速度のプロット
         axs[2].plot(times, accelerations, label="Following Vehicle Acceleration")
         axs[2].set_xlabel("Time (s)")
-        axs[2].set_ylabel("Acceleration (m/s^2)")  # '²' を '^2' に変更
+        axs[2].set_ylabel("Acceleration (m/s^2)")
         axs[2].legend()
 
         plt.tight_layout()
@@ -245,7 +321,7 @@ class SimulationApp:
                     "Following Position (m)",
                     "Lead Speed (m/s)",
                     "Following Speed (m/s)",
-                    "Acceleration (m/s^2)"  # '²' を '^2' に変更
+                    "Acceleration (m/s^2)"
                 ]
                 writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
                 writer.writeheader()
